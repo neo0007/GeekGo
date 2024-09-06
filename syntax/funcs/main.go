@@ -16,6 +16,11 @@ func main() {
 
 	//Functional8()
 
-	fn := Closure("Neo")
-	println(fn())
+	//fn := Closure("Neo")
+	//println(fn())
+	//Defer()
+	//DeferClosure()
+	//DeferClosureV1()
+	//println(DeferReturnV2())
+	DeferClosureLoopV3()
 }
