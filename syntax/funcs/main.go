@@ -22,5 +22,5 @@ func main() {
 	//DeferClosure()
 	//DeferClosureV1()
 	//println(DeferReturnV2())
-	DeferClosureLoopV3()
+	DeferClosureLoopV1()
 }
