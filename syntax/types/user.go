@@ -41,3 +41,26 @@ func UseList() {
 	var l3Ptr *LinkedList
 	println(l3Ptr)
 }
+
+func (u User) ChangeName(name string) {
+	fmt.Printf("Address of u of ChangeName():%p \n", &u)
+	u.Name = name
+}
+
+func (u *User) ChangeAge(age int) {
+	fmt.Printf("Address of u of ChangeAge():%p \n", u)
+	u.Age = age
+}
+
+func ChangeUser() {
+	u1 := User{Name: "Tom", Age: 18}
+	fmt.Printf("Address of u1 of ChangeUser():%p \n", &u1)
+	u1.ChangeName("Jerry")
+	u1.ChangeAge(40)
+	fmt.Printf("%+v\n", u1)
+
+	up1 := &User{}
+	up1.ChangeName("Jerry")
+	up1.ChangeAge(40)
+	fmt.Printf("%+v\n", up1)
+}
