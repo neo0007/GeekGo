@@ -31,7 +31,7 @@ const onFinishFailed = (errorInfo: any) => {
 };
 
 function EditForm() {
-    const p: Profile = {} as Profile
+    let p: Profile = {Email: "", Phone: "", Nickname: "", Birthday:"", AboutMe: ""}
     const [data, setData] = useState<Profile>(p)
     const [isLoading, setLoading] = useState(false)
 
