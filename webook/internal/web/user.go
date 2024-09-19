@@ -3,7 +3,6 @@ package web
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/domain"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
-	"fmt"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -63,10 +62,6 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	const (
-		emailRegexPattern    = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-		passwordRegexPattern = "^[A-Za-z\\d@$!%*?&]{8,}$"
-	)
 
 	ok, err := u.emailExp.MatchString(req.Email)
 	if err != nil {
@@ -94,7 +89,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	//调用一下 svc 的方法
+	//调用一下 svc 的方法, 存储数据到数据库
 	err = u.svc.Signup(c, domain.User{Email: req.Email, Password: req.Password})
 	if err != nil {
 		c.String(http.StatusOK, "系统异常")
@@ -102,9 +97,6 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "signup successfully")
-	fmt.Printf("%+v\n", req)
-	//下面是数据库操作
-
 }
 
 func (u *UserHandler) Login(c *gin.Context) {

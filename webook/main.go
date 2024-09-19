@@ -19,8 +19,13 @@ func main() {
 
 	r := initWebServer()
 
+	// 注册路由须在中间件 cors 跨域插件运行之后，否则不会生效！
 	u.RegisterRoutes(r)
-	r.Run("localhost:8080")
+
+	err := r.Run("localhost:8080")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initWebServer() *gin.Engine {
