@@ -40,6 +40,7 @@ func initWebServer() *gin.Engine {
 	r.Use(cors.New(cors.Config{
 		//AllowOrigins:     []string{"http://localhost:3000"},
 		//AllowMethods:     []string{"POST", "GET", "OPTIONS"},
+		//如果省略上面 AllowMethods:...... 则所有 POST、GET等全部方法将都被允许
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Authorization"},
 		AllowCredentials: true,
@@ -71,9 +72,13 @@ func initDB() *gorm.DB {
 		panic(err)
 	}
 
-	err = dao.InitTable(db)
-	if err != nil {
-		panic(err)
+	initDB := false
+	if initDB {
+		err = dao.InitTable(db)
+		if err != nil {
+			panic(err)
+		}
 	}
+
 	return db
 }
