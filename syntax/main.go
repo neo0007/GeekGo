@@ -1,6 +1,6 @@
 package main
 
-import "geekbang/basic-go/syntax/generics"
+import "geekbang/basic-go/syntax/types"
 
 func main() {
 	//var list types.List
@@ -23,7 +23,8 @@ func main() {
 
 	//generics.UseList()
 
-	println(generics.Sum[int](1, 2, 3))
-	println(generics.Sum[float64](1.1, 2.2, 3.3))
+	//println(generics.Sum[int](1, 2, 3))
+	//println(generics.Sum[float64](1.1, 2.2, 3.3))
 
+	types.ChangeUser()
 }
