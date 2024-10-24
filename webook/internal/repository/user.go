@@ -6,6 +6,9 @@ import (
 	"context"
 )
 
+var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+var ErrUserNotFound = dao.ErrUserNotFound
+
 type UserRepository struct {
 	dao *dao.UserDao
 }
@@ -21,7 +24,17 @@ func (r *UserRepository) Create(c context.Context, u domain.User) error {
 	})
 }
 
-func (r *UserRepository) FindById() {
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+	u, err := r.dao.FindByEmail(ctx, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return domain.User{
+		Id:       u.Id,
+		Email:    u.Email,
+		Password: u.Password,
+	}, nil
+
 	//先从 cache 里面找
 	//再从 dao 里面找
 	//找到了回写 cache

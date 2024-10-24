@@ -38,15 +38,15 @@ instance.interceptors.response.use(function (resp) {
     if (newRefreshToken) {
         localStorage.setItem("refresh_token", newRefreshToken)
     }
-    // if (resp.status == 401) {
-    //     window.location.href="/users/login"
-    // }
+    if (resp.status == 401) {
+        window.location.href="/users/login"
+    }
     return resp
 }, (err) => {
     console.log(err)
-    // if (err.response.status == 401) {
-    //     window.location.href="/users/login"
-    // }
+    if (err.response.status == 401) {
+        window.location.href="/users/login"
+    }
     return err
 })
 //

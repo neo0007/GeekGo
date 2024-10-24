@@ -5,7 +5,10 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,13 +33,12 @@ func main() {
 
 func initWebServer() *gin.Engine {
 	r := gin.Default()
+
 	// r.Use 的作用是全局使用，即应用在全部路由上生效，首先执行的是 Use，然后执行路由
 	r.Use(func(c *gin.Context) {
 		println("this is first middleware")
 	})
-	r.Use(func(c *gin.Context) {
-		println("this is second middleware")
-	})
+
 	r.Use(cors.New(cors.Config{
 		//AllowOrigins:     []string{"http://localhost:3000"},
 		//AllowMethods:     []string{"POST", "GET", "OPTIONS"},
@@ -52,6 +54,15 @@ func initWebServer() *gin.Engine {
 		},
 		MaxAge: 12 * time.Hour,
 	}))
+
+	// cookie 的设置也需要放在解决跨域问题之后，否则也会出现不可预料的错误！
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(sessions.Sessions("mysession", store))
+
+	r.Use(middleware.NewLoginMiddlewareBuilder().
+		IgnorePaths("/users/signup").
+		IgnorePaths("/users/login").Build())
+
 	return r
 }
 
@@ -72,7 +83,7 @@ func initDB() *gorm.DB {
 		panic(err)
 	}
 
-	initDB := false
+	initDB := true
 	if initDB {
 		err = dao.InitTable(db)
 		if err != nil {
@@ -82,3 +93,15 @@ func initDB() *gorm.DB {
 
 	return db
 }
+
+//func (*LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		//不需要校验
+//		if c.Request.URL.Path == "/users/login" ||
+//			c.Request.URL.Path == "/users/signup" {
+//			return
+//		}
+//
+//	}
+
+//}

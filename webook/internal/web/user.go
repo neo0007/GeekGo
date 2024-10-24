@@ -3,7 +3,9 @@ package web
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/domain"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
+	"errors"
 	regexp "github.com/dlclark/regexp2"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -47,9 +49,9 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 
 func (u *UserHandler) Signup(c *gin.Context) {
 	type SignupReq struct {
-		Email           string `json:"email" binding:"required"`
-		Password        string `json:"password" binding:"required"`
-		ConfirmPassword string `json:"confirmPassword" binding:"required"`
+		Email           string `json:"email"`
+		Password        string `json:"password"`
+		ConfirmPassword string `json:"confirmPassword"`
 	}
 	//c.String(http.StatusOK, "signup successfully before")
 	var req SignupReq
@@ -91,6 +93,10 @@ func (u *UserHandler) Signup(c *gin.Context) {
 
 	//调用一下 svc 的方法, 存储数据到数据库
 	err = u.svc.Signup(c, domain.User{Email: req.Email, Password: req.Password})
+	if errors.Is(err, service.ErrUserDuplicateEmail) {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
 	if err != nil {
 		c.String(http.StatusOK, "系统异常")
 		return
@@ -100,6 +106,33 @@ func (u *UserHandler) Signup(c *gin.Context) {
 }
 
 func (u *UserHandler) Login(c *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req LoginReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := u.svc.Login(c, domain.User{Email: req.Email, Password: req.Password})
+	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		c.String(http.StatusOK, "用户名或密码不对！")
+		return
+	}
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+
+	sess := sessions.Default(c)
+	sess.Set("userId", user.Id)
+	sess.Save()
+
+	c.String(http.StatusOK, "登录成功！")
+	return
 
 }
 
@@ -108,5 +141,5 @@ func (u *UserHandler) Edit(c *gin.Context) {
 }
 
 func (u *UserHandler) Profile(c *gin.Context) {
-
+	c.String(http.StatusOK, "这是你的 Profile！")
 }
