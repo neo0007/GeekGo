@@ -8,7 +8,7 @@ const { TextArea } = Input;
 
 const onFinish = (values: any) => {
     if (values.birthday) {
-        values.birthday = moment(values.birthday).format("YYYY-MM-DD")
+        values.birthday = values.birthday.format("YYYY-MM-DD")
     }
     axios.post("/users/edit", values)
         .then((res) => {
@@ -20,7 +20,7 @@ const onFinish = (values: any) => {
                 router.push('/users/profile')
                 return
             }
-            alert(res.data?.msg || "系统错误");
+            // alert(res.data?.msg || "系统错误");
         }).catch((err) => {
         alert(err);
     })

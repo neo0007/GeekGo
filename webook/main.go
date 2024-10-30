@@ -8,7 +8,7 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -56,7 +56,16 @@ func initWebServer() *gin.Engine {
 	}))
 
 	// cookie 的设置也需要放在解决跨域问题之后，否则也会出现不可预料的错误！
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+	// 单机用 memstore, 多实例部署用 redis
+	//store := memstore.NewStore([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"), []byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
+	store, err := redis.NewStore(16,
+		"tcp", "localhost:6379", "",
+		[]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"),
+		[]byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
+	if err != nil {
+		panic(err)
+	}
 	r.Use(sessions.Sessions("mysession", store))
 
 	r.Use(middleware.NewLoginMiddlewareBuilder().

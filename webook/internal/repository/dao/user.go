@@ -48,7 +48,7 @@ func (dao *UserDao) FindByEmail(ctx context.Context, email string) (User, error)
 // User 对应数据库表结构
 // 有些人叫做 entity，有些人叫做 model，有些人叫做 PO(Persistent Object)
 type User struct {
-	Id       int64  `gorm:"primarykey,autoIncrement"`
+	Id       int64  `gorm:"primaryKey,autoIncrement"`
 	Email    string `gorm:"unique"`
 	Password string
 
