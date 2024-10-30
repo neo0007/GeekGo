@@ -7,8 +7,6 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -43,8 +41,9 @@ func initWebServer() *gin.Engine {
 		//AllowOrigins:     []string{"http://localhost:3000"},
 		//AllowMethods:     []string{"POST", "GET", "OPTIONS"},
 		//如果省略上面 AllowMethods:...... 则所有 POST、GET等全部方法将都被允许
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length", "Authorization"},
+		AllowHeaders: []string{"Content-Type", "Authorization"},
+		// 你不加ExposeHeaders，前端是拿不到对应数据的
+		ExposeHeaders:    []string{"Content-Length", "Authorization", "x-jwt-token"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
@@ -59,18 +58,18 @@ func initWebServer() *gin.Engine {
 	//store := cookie.NewStore([]byte("secret"))
 	// 单机用 memstore, 多实例部署用 redis
 	//store := memstore.NewStore([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"), []byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
-	store, err := redis.NewStore(16,
-		"tcp", "localhost:6379", "",
-		[]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"),
-		[]byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
-	if err != nil {
-		panic(err)
-	}
-	r.Use(sessions.Sessions("mysession", store))
+	//store, err := redis.NewStore(16,
+	//	"tcp", "localhost:6379", "",
+	//	[]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"),
+	//	[]byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//r.Use(sessions.Sessions("mysession", store))
 
-	r.Use(middleware.NewLoginMiddlewareBuilder().
-		IgnorePaths("/users/signup").
-		IgnorePaths("/users/login").Build())
+	r.Use(middleware.NewLoginJWTMiddlewareBuilder().
+		IgnorePath("/users/login").
+		IgnorePath("/users/signup").Build())
 
 	return r
 }
