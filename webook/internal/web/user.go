@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"time"
 )
 
 // UserHandler 定义与用户有关的路由
@@ -47,7 +48,8 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 	//ug.POST("/login", u.Login)
 	ug.POST("login", u.LoginJWT)
 	ug.POST("/edit", u.Edit)
-	ug.GET("/profile", u.Profile)
+	//ug.GET("/profile", u.Profile)
+	ug.GET("/profile", u.ProfileJWT)
 }
 
 func (u *UserHandler) Signup(c *gin.Context) {
@@ -164,7 +166,14 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 		return
 	}
 
-	token := jwt.New(jwt.SigningMethodHS512)
+	claims := UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+		Uid: user.Id,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	tokenStr, err := token.SignedString([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"))
 	if err != nil {
 		c.String(http.StatusInternalServerError, "系统错误")
@@ -186,4 +195,27 @@ func (u *UserHandler) Edit(c *gin.Context) {
 
 func (u *UserHandler) Profile(c *gin.Context) {
 	c.String(http.StatusOK, "这是你的 Profile！")
+}
+
+func (u *UserHandler) ProfileJWT(c *gin.Context) {
+	cs, ok := c.Get("claims")
+	if !ok {
+		//可以考虑监控这里
+		c.String(http.StatusOK, "系统错误")
+		return
+	}
+	// ok代表是不是 *UserClaims
+	claims, ok := cs.(*UserClaims)
+	if !ok {
+		//可以考虑监控这里
+		c.String(http.StatusOK, "系统错误")
+		return
+	}
+	println(claims.Uid)
+}
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	//声明你要放进token里面的数据
+	Uid int64
 }

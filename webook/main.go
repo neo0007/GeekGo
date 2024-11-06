@@ -56,8 +56,10 @@ func initWebServer() *gin.Engine {
 
 	// cookie 的设置也需要放在解决跨域问题之后，否则也会出现不可预料的错误！
 	//store := cookie.NewStore([]byte("secret"))
-	// 单机用 memstore, 多实例部署用 redis
-	//store := memstore.NewStore([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"), []byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
+	// 单机用 memstore:
+	//store := memstore.NewStore([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"),
+	//[]byte("jp74g2x60gqqv2mrn36xpzmussrmyeyx"))
+	//多实例部署用 redis:
 	//store, err := redis.NewStore(16,
 	//	"tcp", "localhost:6379", "",
 	//	[]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"),
