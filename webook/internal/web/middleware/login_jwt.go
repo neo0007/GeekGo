@@ -63,9 +63,6 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
-		ua := c.Request.UserAgent()
-		println(ua)
-
 		if claims.UserAgent != c.Request.UserAgent() {
 			// 严重安全问题
 			// 要放监控
@@ -77,14 +74,19 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		// 每 10秒刷新一次
 		if claims.ExpiresAt.Sub(now) < time.Second*50 {
 			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
+			//claims.Uid = int64(888)
+			//claims自动绑定更新，不需要重新绑定 claims
+			//token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 			tokenStr, err = token.SignedString([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"))
 			if err != nil {
 				//记录日志
 				log.Println("jwt 续约失败", err)
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
 			}
 			c.Header("x-jwt-token", tokenStr)
-		}
 
-		c.Set("claims", claims)
+			c.Set("claims", claims)
+		}
 	}
 }

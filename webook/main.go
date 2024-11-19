@@ -6,27 +6,36 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
+	"Neo/Workplace/goland/src/GeekGo/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 	"time"
 )
 
 func main() {
-	db := initDB()
-	u := initUser(db)
+	//db := initDB()
+	//u := initUser(db)
 
-	r := initWebServer()
+	//r := initWebServer()
 
 	// 注册路由须在中间件 cors 跨域插件运行之后，否则不会生效！
-	u.RegisterRoutes(r)
+	//u.RegisterRoutes(r)
+	r := gin.Default()
 
-	err := r.Run("localhost:8080")
-	if err != nil {
-		panic(err)
-	}
+	r.GET("/hello", func(c *gin.Context) {
+		c.String(http.StatusOK, "hello world")
+	})
+
+	r.Run(":8080")
+	//err := r.Run("localhost:8080")
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func initWebServer() *gin.Engine {
@@ -36,6 +45,11 @@ func initWebServer() *gin.Engine {
 	r.Use(func(c *gin.Context) {
 		println("this is first middleware")
 	})
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	r.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
 	r.Use(cors.New(cors.Config{
 		//AllowOrigins:     []string{"http://localhost:3000"},

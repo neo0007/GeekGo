@@ -4,7 +4,6 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/domain"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"errors"
-	"fmt"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -134,14 +133,10 @@ func (u *UserHandler) Login(c *gin.Context) {
 
 	sess := sessions.Default(c)
 	sess.Set("userId", user.Id)
-	sess.Options(sessions.Options{
-		MaxAge: 30,
-	})
+	sess.Set("updateTime", time.Now().UnixMilli())
 	sess.Save()
 
 	c.String(http.StatusOK, "登录成功！")
-	return
-
 }
 
 func (u *UserHandler) LoginJWT(c *gin.Context) {
@@ -168,7 +163,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 
 	claims := UserClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
 		},
 		Uid:       user.Id,
 		UserAgent: c.Request.UserAgent(),
@@ -182,12 +177,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 	}
 	c.Header("x-jwt-token", tokenStr)
 
-	fmt.Println(tokenStr)
-	fmt.Println(user)
-
 	c.String(http.StatusOK, "登录成功！")
-	return
-
 }
 
 func (u *UserHandler) Edit(c *gin.Context) {

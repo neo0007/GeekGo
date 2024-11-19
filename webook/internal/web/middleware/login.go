@@ -30,24 +30,20 @@ func (l *LoginMiddlewareBuilder) Build() gin.HandlerFunc {
 
 		sess := sessions.Default(c)
 		userId := sess.Get("userId")
-		if userId == nil {
+		updateTime := sess.Get("updateTime")
+		if updateTime == nil || userId == nil {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-
+		// 当执行sessions.save 时，需要重新 set所有要保存的值，原来的数据将会覆盖所以这里要重新设置一下userId
 		sess.Set("userId", userId)
+		//session.Options需要 Save 方法后才能发挥作用，第一次进入的时候没有 Save，
+		//需要在login函数中调用控制一次，这里是刷新时候用到的，重新 Save 后如果不设置
+		//将不在保留原来Save 的内容
 		sess.Options(sessions.Options{
 			MaxAge: 30,
 		})
-		updateTime := sess.Get("updateTime")
 		now := time.Now().UnixMilli()
-		//如果没有刷新过
-		if updateTime == nil {
-			sess.Set("updateTime", now)
-			sess.Save()
-			return
-		}
-		//如果updateTime存在
 		updateTimeVal, ok := updateTime.(int64)
 		if !ok {
 			c.AbortWithStatus(http.StatusInternalServerError)
