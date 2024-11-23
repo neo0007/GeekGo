@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: webook
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: webook
@@ -17,6 +17,6 @@ spec:
       #hostNetwork: true
       containers:
         - name: webook
-          image: neo007/webook:v0.0.1
+          image: neo007/webook:v0.0.2
           ports:
-            - containerPort: 8080
+            - containerPort: 8081

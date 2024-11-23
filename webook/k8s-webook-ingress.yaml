@@ -7,14 +7,18 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-#  - host: webook.local
+#    - host 是 webook.com 的时候，命中本条：
+#  - host: webook.com
   - host: localhost
     http:
       paths:
+#        - 请求路径的前缀是 / 的时候，
+#        将流量转发过去后面的 webook 服务上
+#        端口是 81
       - path: /
         pathType: Prefix
         backend:
           service:
             name: webook
             port:
-              number: 80
+              number: 81

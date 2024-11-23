@@ -8,6 +8,7 @@ spec:
   ports:
     - protocol: TCP
       name: http
-      port: 80
-      targetPort: 8080
+      port: 81
+#     targetPort: 与 deployment 中的containerPort 保持一致
+      targetPort: 8081
   type: LoadBalancer

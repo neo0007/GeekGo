@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Neo/Workplace/goland/src/GeekGo/webook/config"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
@@ -12,26 +13,26 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
 	"strings"
 	"time"
 )
 
 func main() {
-	//db := initDB()
-	//u := initUser(db)
+	db := initDB()
+	u := initUser(db)
 
-	//r := initWebServer()
+	r := initWebServer()
 
-	// 注册路由须在中间件 cors 跨域插件运行之后，否则不会生效！
-	//u.RegisterRoutes(r)
-	r := gin.Default()
+	//注册路由须在中间件 cors 跨域插件运行之后，否则不会生效！
+	u.RegisterRoutes(r)
 
-	r.GET("/hello", func(c *gin.Context) {
-		c.String(http.StatusOK, "hello world")
-	})
+	//r := gin.Default()
+	//
+	//r.GET("/hello", func(c *gin.Context) {
+	//	c.String(http.StatusOK, "hello world")
+	//})
 
-	r.Run(":8080")
+	r.Run(":8081")
 	//err := r.Run("localhost:8080")
 	//if err != nil {
 	//	panic(err)
@@ -47,7 +48,7 @@ func initWebServer() *gin.Engine {
 	})
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: config.Config.Redis.Addr,
 	})
 	r.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
@@ -63,7 +64,7 @@ func initWebServer() *gin.Engine {
 			if strings.HasPrefix(origin, "http://localhost") {
 				return true
 			}
-			return strings.Contains(origin, "yourcompany.com")
+			return strings.Contains(origin, "webook.com")
 		},
 		MaxAge: 12 * time.Hour,
 	}))
@@ -99,7 +100,7 @@ func initUser(db *gorm.DB) *web.UserHandler {
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		// 应该只在初始化过程中 panic
 		// panic 相当于整个 goroutine 结束
