@@ -33,5 +33,5 @@ spec:
       volumes:
         - name: mysql-storage
           persistentVolumeClaim:
-            claimName: webook-mysql-claim
+            claimName: webook-mysql-new-claim
       

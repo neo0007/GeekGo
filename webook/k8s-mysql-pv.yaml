@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: my-local-pv
+  name: my-local-new-pv
 spec:
   storageClassName: manual
   capacity:
@@ -9,6 +9,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/data"
-
-  
+    path: "/Users/neo/Workplace/data"

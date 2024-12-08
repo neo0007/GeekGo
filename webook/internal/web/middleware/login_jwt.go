@@ -71,9 +71,9 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		}
 
 		now := time.Now()
-		// 每 10秒刷新一次
-		if claims.ExpiresAt.Sub(now) < time.Second*50 {
-			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
+		// 每 30分钟刷新一次
+		if claims.ExpiresAt.Sub(now) < time.Minute*90 {
+			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute * 30))
 			//claims.Uid = int64(888)
 			//claims自动绑定更新，不需要重新绑定 claims
 			//token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -85,8 +85,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 				return
 			}
 			c.Header("x-jwt-token", tokenStr)
-
-			c.Set("claims", claims)
 		}
+		c.Set("claims", claims)
 	}
 }

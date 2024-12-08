@@ -163,7 +163,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 
 	claims := UserClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 120)),
 		},
 		Uid:       user.Id,
 		UserAgent: c.Request.UserAgent(),
@@ -189,6 +189,14 @@ func (u *UserHandler) Profile(c *gin.Context) {
 }
 
 func (u *UserHandler) ProfileJWT(c *gin.Context) {
+	type userProfile struct {
+		Email    string `json:"Email"`
+		Phone    string `json:"Phone"`
+		Nickname string `json:"Nickname"`
+		Birthday string `json:"Birthday"`
+		AboutMe  string `json:"AboutMe"`
+	}
+
 	cs, ok := c.Get("claims")
 	if !ok {
 		//可以考虑监控这里
@@ -202,8 +210,22 @@ func (u *UserHandler) ProfileJWT(c *gin.Context) {
 		c.String(http.StatusOK, "系统错误")
 		return
 	}
-	println(claims.Uid)
-	c.String(http.StatusOK, "这是你的 Profile")
+	user, err := u.svc.Profile(c, claims.Uid)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+	}
+
+	var uProfile = userProfile{
+		Email:    user.Email,
+		Phone:    user.Phone,
+		Nickname: user.Nickname,
+		Birthday: user.Birthday,
+		AboutMe:  user.AboutMe,
+	}
+
+	c.JSON(http.StatusOK, uProfile)
+	//println(claims.Uid)
+	//c.String(http.StatusOK, "这是你的 Profile")
 }
 
 type UserClaims struct {

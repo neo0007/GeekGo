@@ -3,6 +3,7 @@ package main
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/config"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
@@ -92,8 +93,10 @@ func initWebServer() *gin.Engine {
 }
 
 func initUser(db *gorm.DB) *web.UserHandler {
+	redisClient := initRedis()
 	ud := dao.NewUserDao(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(redisClient)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
 	u := web.NewUserHandler(svc)
 	return u
@@ -117,6 +120,14 @@ func initDB() *gorm.DB {
 	}
 
 	return db
+}
+
+func initRedis() redis.Cmdable {
+	return redis.NewClient(&redis.Options{
+		Addr:     config.Config.Redis.Addr, // 对应 Docker Compose 中 Redis 的端口
+		Password: "",                       // Redis 没有设置密码
+		DB:       0,                        // 使用默认的 Redis DB
+	})
 }
 
 //func (*LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
