@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrCodeSendTooMany = cache.ErrCodeSendTooMany
+	ErrCodeSendTooMany        = cache.ErrCodeSendTooMany
+	ErrCodeVerifyTooManyTimes = cache.ErrCodeVerifyTooManyTimes
+	ErrUnknownForCode         = cache.ErrUnknownForCode
 )
 
 type CodeRepository struct {

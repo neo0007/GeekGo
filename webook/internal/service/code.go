@@ -8,13 +8,27 @@ import (
 	"math/rand"
 )
 
+var (
+	ErrCodeSendTooMany        = repository.ErrCodeSendTooMany
+	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
+	ErrUnknownForCode         = repository.ErrUnknownForCode
+)
+
 type CodeService struct {
 	repo   *repository.CodeRepository
 	smsSvc sms.Service
 }
 
+func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
+	return &CodeService{
+		repo:   repo,
+		smsSvc: smsSvc,
+	}
+
+}
+
 func (svc CodeService) Send(ctx context.Context,
-//区别业务场景
+	//区别业务场景
 	biz string,
 	phone string) error {
 	code := svc.generateCode()

@@ -6,6 +6,7 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/memory"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
 	"Neo/Workplace/goland/src/GeekGo/webook/pkg/ginx/middleware/ratelimit"
@@ -20,7 +21,8 @@ import (
 
 func main() {
 	db := initDB()
-	u := initUser(db)
+	rdb := initRedis()
+	u := initUser(db, rdb)
 
 	r := initWebServer()
 
@@ -87,18 +89,23 @@ func initWebServer() *gin.Engine {
 
 	r.Use(middleware.NewLoginJWTMiddlewareBuilder().
 		IgnorePath("/users/login").
+		IgnorePath("/users/login_sms/code/send").
+		IgnorePath("/users/login_sms").
 		IgnorePath("/users/signup").Build())
 
 	return r
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
-	redisClient := initRedis()
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	ud := dao.NewUserDao(db)
-	uc := cache.NewUserCache(redisClient)
+	uc := cache.NewUserCache(rdb)
 	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
-	u := web.NewUserHandler(svc)
+	codeCache := cache.NewCodeCache(rdb)
+	codeRepo := repository.NewCodeRepository(codeCache)
+	smsSvc := memory.NewService()
+	codeSvc := service.NewCodeService(codeRepo, smsSvc)
+	u := web.NewUserHandler(svc, codeSvc)
 	return u
 }
 
