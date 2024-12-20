@@ -55,3 +55,21 @@ func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, err
 	}
 	return u, nil
 }
+
+func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		// err 为 nil 会进来这里
+		// 不为 ErrUserNotFound 也会进来这里
+		return domain.User{}, err
+	}
+	u = domain.User{
+		Phone: phone,
+	}
+	err = svc.repo.Create(ctx, u)
+	if err != nil {
+		return u, err
+	}
+	// 这里会遇到主从延迟的问题，如果按照下面代码
+	return svc.repo.FindByPhone(ctx, phone)
+}

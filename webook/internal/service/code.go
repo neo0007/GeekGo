@@ -27,7 +27,7 @@ func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeSe
 
 }
 
-func (svc CodeService) Send(ctx context.Context,
+func (svc *CodeService) Send(ctx context.Context,
 	//区别业务场景
 	biz string,
 	phone string) error {
@@ -40,7 +40,7 @@ func (svc CodeService) Send(ctx context.Context,
 	return svc.smsSvc.Send(ctx, codeTplId, []string{code}, code)
 }
 
-func (svc CodeService) Verify(ctx context.Context, biz string,
+func (svc *CodeService) Verify(ctx context.Context, biz string,
 	phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 
