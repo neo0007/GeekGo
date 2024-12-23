@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrUserDuplicateEmail = repository.ErrUserDuplicateEmail
+var ErrUserDuplicate = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("账号/邮箱或密码不对")
 
 type UserService struct {
@@ -67,7 +67,7 @@ func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.
 		Phone: phone,
 	}
 	err = svc.repo.Create(ctx, u)
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrUserDuplicate) {
 		return u, err
 	}
 	// 这里会遇到主从延迟的问题，如果按照下面代码

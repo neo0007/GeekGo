@@ -14,6 +14,9 @@ import (
 
 const biz = "login"
 
+// 确保 handler 上实现了 UserHandler 的接口
+var _ handler = (*UserHandler)(nil)
+
 // UserHandler 定义与用户有关的路由
 type UserHandler struct {
 	svc         *service.UserService
@@ -186,7 +189,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 
 	//调用一下 svc 的方法, 存储数据到数据库
 	err = u.svc.Signup(c, domain.User{Email: req.Email, Password: req.Password})
-	if errors.Is(err, service.ErrUserDuplicateEmail) {
+	if errors.Is(err, service.ErrUserDuplicate) {
 		c.String(http.StatusOK, err.Error())
 		return
 	}
