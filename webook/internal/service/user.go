@@ -11,15 +11,22 @@ import (
 var ErrUserDuplicate = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("账号/邮箱或密码不对")
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserService interface {
+	Signup(c context.Context, u domain.User) error
+	Login(c context.Context, u domain.User) (domain.User, error)
+	Profile(ctx context.Context, id int64) (domain.User, error)
+	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{repo: repo}
+type DesignUserService struct {
+	repo repository.UserRepository
 }
 
-func (svc *UserService) Signup(c context.Context, u domain.User) error {
+func NewUserService(repo repository.UserRepository) UserService {
+	return &DesignUserService{repo: repo}
+}
+
+func (svc *DesignUserService) Signup(c context.Context, u domain.User) error {
 	//考虑加密
 	//考虑存储
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
@@ -31,7 +38,7 @@ func (svc *UserService) Signup(c context.Context, u domain.User) error {
 	return svc.repo.Create(c, u)
 }
 
-func (svc *UserService) Login(c context.Context, u domain.User) (domain.User, error) {
+func (svc *DesignUserService) Login(c context.Context, u domain.User) (domain.User, error) {
 	//先找用户
 	ud, err := svc.repo.FindByEmail(c, u.Email)
 	if errors.Is(err, repository.ErrUserNotFound) {
@@ -48,7 +55,7 @@ func (svc *UserService) Login(c context.Context, u domain.User) (domain.User, er
 	return ud, nil
 }
 
-func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
+func (svc *DesignUserService) Profile(ctx context.Context, id int64) (domain.User, error) {
 	u, err := svc.repo.FindById(ctx, id)
 	if err != nil {
 		return domain.User{}, err
@@ -56,7 +63,7 @@ func (svc *UserService) Profile(ctx context.Context, id int64) (domain.User, err
 	return u, nil
 }
 
-func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+func (svc *DesignUserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
 	u, err := svc.repo.FindByPhone(ctx, phone)
 	if err != repository.ErrUserNotFound {
 		// err 为 nil 会进来这里
