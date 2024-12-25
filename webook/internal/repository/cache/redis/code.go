@@ -1,6 +1,7 @@
-package cache
+package redis
 
 import (
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
 	"context"
 	_ "embed"
 	"errors"
@@ -22,16 +23,11 @@ var luaSetCode string
 //go:embed lua/verify_code.lua
 var luaVarifyCode string
 
-type CodeCache interface {
-	Set(ctx context.Context, biz, phone, code string) error
-	Verify(ctx context.Context, biz, phone, inputCode string) (bool, error)
-}
-
 type RedisCodeCache struct {
 	client redis.Cmdable
 }
 
-func NewCodeCache(client redis.Cmdable) CodeCache {
+func NewCodeCache(client redis.Cmdable) cache.CodeCache {
 	return &RedisCodeCache{client: client}
 }
 

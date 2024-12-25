@@ -17,6 +17,6 @@ spec:
       #hostNetwork: true
       containers:
         - name: webook
-          image: neo007/webook:v0.0.2
+          image: neo007/webook:v0.0.1
           ports:
             - containerPort: 8081

@@ -2,7 +2,7 @@ package ioc
 
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/config"
-	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
+	gorm2 "Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao/gorm"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -17,7 +17,7 @@ func InitDB() *gorm.DB {
 	}
 	initDB := true
 	if initDB {
-		err = dao.InitTable(db)
+		err = gorm2.InitTable(db)
 		if err != nil {
 			panic(err)
 		}

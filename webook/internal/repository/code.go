@@ -2,13 +2,14 @@ package repository
 
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache/redis"
 	"context"
 )
 
 var (
-	ErrCodeSendTooMany        = cache.ErrCodeSendTooMany
-	ErrCodeVerifyTooManyTimes = cache.ErrCodeVerifyTooManyTimes
-	ErrUnknownForCode         = cache.ErrUnknownForCode
+	ErrCodeSendTooMany        = redis.ErrCodeSendTooMany
+	ErrCodeVerifyTooManyTimes = redis.ErrCodeVerifyTooManyTimes
+	ErrUnknownForCode         = redis.ErrUnknownForCode
 )
 
 type CodeRepository interface {

@@ -12,5 +12,6 @@ spec:
 #     targetPort 与 deployment.yaml 中的containerPort 保持一致
       targetPort: 6379
       nodePort: 30010
+#  如果 type: LoadBalancer 则外部访问端口为 6380，为 NodePort 则外部访问端口为 30010
   type: NodePort
   

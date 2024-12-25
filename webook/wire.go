@@ -4,8 +4,8 @@ package main
 
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository"
-	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
-	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache/redis"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao/gorm"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
 	"Neo/Workplace/goland/src/GeekGo/webook/ioc"
@@ -18,10 +18,10 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方依赖
 		ioc.InitDB, ioc.InitRedis,
 		// 初始化 DAO
-		dao.NewUserDao,
+		gorm.NewUserDao,
 
-		cache.NewUserCache,
-		cache.NewCodeCache,
+		redis.NewUserCache,
+		redis.NewCodeCache,
 
 		repository.NewUserRepository,
 		repository.NewCodeRepository,

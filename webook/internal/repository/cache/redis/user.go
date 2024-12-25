@@ -1,7 +1,8 @@
-package cache
+package redis
 
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/domain"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/cache"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,11 +11,6 @@ import (
 )
 
 var ErrKeyNotExist = redis.Nil
-
-type UserCache interface {
-	Get(ctx context.Context, id int64) (domain.User, error)
-	Set(ctx context.Context, user domain.User) error
-}
 
 type RedisUserCache struct {
 	// redis.Cmdable 是一个接口，传单机 redis 或 cluster redis 等都可以
@@ -26,7 +22,7 @@ type RedisUserCache struct {
 // A 用到了 B，B 一定是 A 的字段
 // A 用到了 B，A 绝对不初始化 B，而是外面注入
 
-func NewUserCache(client redis.Cmdable) UserCache {
+func NewUserCache(client redis.Cmdable) cache.UserCache {
 	return &RedisUserCache{
 		client:     client,
 		expiration: time.Minute * 15,
