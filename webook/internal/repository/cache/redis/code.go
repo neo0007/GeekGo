@@ -12,7 +12,7 @@ import (
 var (
 	ErrCodeSendTooMany        = errors.New("发送验证码太频繁")
 	ErrCodeVerifyTooManyTimes = errors.New("验证次数太多")
-	ErrUnknownForCode         = errors.New("Code未知错误")
+	ErrUnknownForCode         = errors.New("code未知错误")
 )
 
 // 编译器会在编译的时候，把 set_code 的代码放进来这个 luaSetCode 变量里
@@ -21,7 +21,7 @@ var (
 var luaSetCode string
 
 //go:embed lua/verify_code.lua
-var luaVarifyCode string
+var luaVerifyCode string
 
 type RedisCodeCache struct {
 	client redis.Cmdable
@@ -51,7 +51,7 @@ func (c *RedisCodeCache) key(biz, phone string) string {
 }
 
 func (c *RedisCodeCache) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
-	res, err := c.client.Eval(ctx, luaVarifyCode, []string{c.key(biz, phone)}, inputCode).Int()
+	res, err := c.client.Eval(ctx, luaVerifyCode, []string{c.key(biz, phone)}, inputCode).Int()
 	if err != nil {
 		return false, err
 	}

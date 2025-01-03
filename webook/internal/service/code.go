@@ -32,7 +32,7 @@ func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeServ
 }
 
 func (svc *DefaultCodeService) Send(ctx context.Context,
-	//区别业务场景
+//区别业务场景
 	biz string,
 	phone string) error {
 	code := svc.generateCode()
@@ -41,7 +41,7 @@ func (svc *DefaultCodeService) Send(ctx context.Context,
 		return err
 	}
 	const codeTplId = "1877556"
-	return svc.smsSvc.Send(ctx, codeTplId, []string{code}, code)
+	return svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
 }
 
 func (svc *DefaultCodeService) Verify(ctx context.Context, biz string,

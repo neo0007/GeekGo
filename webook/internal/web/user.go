@@ -60,7 +60,7 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 	ug.POST("/login_sms", u.LoginSMS)
 }
 
-func (u UserHandler) SendSMSLoginCode(c *gin.Context) {
+func (u *UserHandler) SendSMSLoginCode(c *gin.Context) {
 	type Req struct {
 		Phone string `json:"phone"`
 	}
@@ -232,6 +232,9 @@ func (u *UserHandler) Login(c *gin.Context) {
 }
 
 func (u *UserHandler) LoginJWT(c *gin.Context) {
+	//这一句防止原来已设置的 jwt token 仍然在有效期，从而出现已登录的错误, 下面这句不管用，后面再检查测试
+	//c.Header("Authorization", "Bearer")
+
 	type LoginReq struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -245,6 +248,9 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 
 	user, err := u.svc.Login(c, domain.User{Email: req.Email, Password: req.Password})
 	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		//下面为重置“x-jwt-token”, 避免原有token在有效期内直接进入profile
+		//请注意如果设置"x-jwt-token"值为空，即“”，则不发生作用，请设置成任何非空字符串即可
+		c.Header("x-jwt-token", "reset")
 		c.String(http.StatusOK, "用户名或密码不对！")
 		return
 	}
@@ -252,7 +258,6 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 		c.String(http.StatusOK, err.Error())
 		return
 	}
-
 	if err = u.setJWTToken(c, user.Id); err != nil {
 		c.String(http.StatusOK, "系统错误！")
 		return

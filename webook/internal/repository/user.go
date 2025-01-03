@@ -21,23 +21,23 @@ type UserRepository interface {
 	FindByPhone(ctx context.Context, phone string) (domain.User, error)
 	FindById(ctx context.Context, id int64) (domain.User, error)
 }
-type DefaultUserRepository struct {
+type DaoUserRepository struct {
 	dao   dao.UserDAO
 	cache cache.UserCache
 }
 
 func NewUserRepository(dao dao.UserDAO, c cache.UserCache) UserRepository {
-	return &DefaultUserRepository{
+	return &DaoUserRepository{
 		dao:   dao,
 		cache: c,
 	}
 }
 
-func (r *DefaultUserRepository) Create(c context.Context, u domain.User) error {
+func (r *DaoUserRepository) Create(c context.Context, u domain.User) error {
 	return r.dao.Insert(c, r.domainToEntity(u))
 }
 
-func (r *DefaultUserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+func (r *DaoUserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	ud, err := r.dao.FindByEmail(ctx, email)
 	if err != nil {
 		return domain.User{}, err
@@ -49,7 +49,7 @@ func (r *DefaultUserRepository) FindByEmail(ctx context.Context, email string) (
 	//找到了回写 cache
 }
 
-func (r *DefaultUserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
+func (r *DaoUserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
 	ud, err := r.dao.FindByPhone(ctx, phone)
 	if err != nil {
 		return domain.User{}, err
@@ -61,7 +61,7 @@ func (r *DefaultUserRepository) FindByPhone(ctx context.Context, phone string) (
 	//找到了回写 cache
 }
 
-func (r *DefaultUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
+func (r *DaoUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
 	u, err := r.cache.Get(ctx, id)
 	if err == nil {
 		// 必然有数据
@@ -83,7 +83,7 @@ func (r *DefaultUserRepository) FindById(ctx context.Context, id int64) (domain.
 	return u, err
 }
 
-func (r *DefaultUserRepository) entityToDomain(u entity.User) domain.User {
+func (r *DaoUserRepository) entityToDomain(u entity.User) domain.User {
 	return domain.User{
 		Id:       u.Id,
 		Email:    u.Email.String,
@@ -96,7 +96,7 @@ func (r *DefaultUserRepository) entityToDomain(u entity.User) domain.User {
 	}
 }
 
-func (r *DefaultUserRepository) domainToEntity(u domain.User) entity.User {
+func (r *DaoUserRepository) domainToEntity(u domain.User) entity.User {
 	return entity.User{
 		Id: u.Id,
 		Email: sql.NullString{
