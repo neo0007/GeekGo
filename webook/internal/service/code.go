@@ -19,20 +19,20 @@ type CodeService interface {
 	Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error)
 }
 
-type DefaultCodeService struct {
+type CodeServiceImpl struct {
 	repo   repository.CodeRepository
 	smsSvc sms.Service
 }
 
 func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
-	return &DefaultCodeService{
+	return &CodeServiceImpl{
 		repo:   repo,
 		smsSvc: smsSvc,
 	}
 }
 
-func (svc *DefaultCodeService) Send(ctx context.Context,
-//区别业务场景
+func (svc *CodeServiceImpl) Send(ctx context.Context,
+	//区别业务场景
 	biz string,
 	phone string) error {
 	code := svc.generateCode()
@@ -44,13 +44,13 @@ func (svc *DefaultCodeService) Send(ctx context.Context,
 	return svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
 }
 
-func (svc *DefaultCodeService) Verify(ctx context.Context, biz string,
+func (svc *CodeServiceImpl) Verify(ctx context.Context, biz string,
 	phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 
 }
 
-func (svc *DefaultCodeService) generateCode() string {
+func (svc *CodeServiceImpl) generateCode() string {
 	// 6位数，num 在 0-999999之间，包括 0 和 999999
 	num := rand.Intn(1000000)
 	//不够 6 位数，加上前导 0

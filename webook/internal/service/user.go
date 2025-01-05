@@ -18,15 +18,15 @@ type UserService interface {
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 }
 
-type DefaultUserService struct {
+type UserServiceImpl struct {
 	repo repository.UserRepository
 }
 
 func NewUserService(repo repository.UserRepository) UserService {
-	return &DefaultUserService{repo: repo}
+	return &UserServiceImpl{repo: repo}
 }
 
-func (svc *DefaultUserService) Signup(c context.Context, u domain.User) error {
+func (svc *UserServiceImpl) Signup(c context.Context, u domain.User) error {
 	//考虑加密
 	//考虑存储
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
@@ -38,7 +38,7 @@ func (svc *DefaultUserService) Signup(c context.Context, u domain.User) error {
 	return svc.repo.Create(c, u)
 }
 
-func (svc *DefaultUserService) Login(c context.Context, u domain.User) (domain.User, error) {
+func (svc *UserServiceImpl) Login(c context.Context, u domain.User) (domain.User, error) {
 	//先找用户
 	ud, err := svc.repo.FindByEmail(c, u.Email)
 	if errors.Is(err, repository.ErrUserNotFound) {
@@ -55,7 +55,7 @@ func (svc *DefaultUserService) Login(c context.Context, u domain.User) (domain.U
 	return ud, nil
 }
 
-func (svc *DefaultUserService) Profile(ctx context.Context, id int64) (domain.User, error) {
+func (svc *UserServiceImpl) Profile(ctx context.Context, id int64) (domain.User, error) {
 	u, err := svc.repo.FindById(ctx, id)
 	if err != nil {
 		return domain.User{}, err
@@ -63,7 +63,7 @@ func (svc *DefaultUserService) Profile(ctx context.Context, id int64) (domain.Us
 	return u, nil
 }
 
-func (svc *DefaultUserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+func (svc *UserServiceImpl) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
 	u, err := svc.repo.FindByPhone(ctx, phone)
 	if err != repository.ErrUserNotFound {
 		// err 为 nil 会进来这里
