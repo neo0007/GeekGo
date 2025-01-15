@@ -105,6 +105,13 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 		return
 	}
 	ok, err := u.codeSvc.Verify(c, biz, req.Phone, req.Code)
+	if errors.Is(err, service.ErrCodeVerifyTooManyTimes) {
+		c.JSON(http.StatusOK, Result{
+			Code: 4,
+			Msg:  "验证次数太多，请重新发送验证码",
+		})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -208,7 +215,7 @@ func (u *UserHandler) Login(c *gin.Context) {
 	}
 
 	var req LoginReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
