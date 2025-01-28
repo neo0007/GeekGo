@@ -164,8 +164,8 @@ func TestUserHandler_Signup(t *testing.T) {
 
 			req, err := http.NewRequest("POST",
 				"/users/signup", bytes.NewBuffer([]byte(tc.reqBody)))
-			req.Header.Set("Content-Type", "application/json")
 			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
 			resp := httptest.NewRecorder()
 			//t.Logf("%+v", resp)
 
@@ -183,11 +183,12 @@ func TestMock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	usersvc := svcmocks.NewMockUserService(ctrl)
+	userSvc := svcmocks.NewMockUserService(ctrl)
 
-	usersvc.EXPECT().Signup(gomock.Any(), gomock.Any()).
+	userSvc.EXPECT().Signup(gomock.Any(), gomock.Any()).
 		Return(errors.New("mock error"))
 
-	err := usersvc.Signup(context.Background(), domain.User{Email: "123@qq.com"})
-	t.Log(err)
+	err := userSvc.Signup(context.Background(), domain.User{Email: "123@qq"})
+	//t.Log(err)
+	require.Equal(t, "mock error", err.Error())
 }
