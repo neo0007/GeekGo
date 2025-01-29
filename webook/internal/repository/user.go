@@ -81,10 +81,14 @@ func (r *UserRepositoryDao) FindById(ctx context.Context, id int64) (domain.User
 		return domain.User{}, err
 	}
 	u = r.entityToDomain(ud)
-	err = r.cache.Set(ctx, u)
-	if err != nil {
-		log.Println(err)
-	}
+
+	go func() {
+		err = r.cache.Set(ctx, u)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+	
 	return u, err
 }
 
@@ -98,6 +102,7 @@ func (r *UserRepositoryDao) entityToDomain(u entity.User) domain.User {
 		Birthday: u.Birthday,
 		AboutMe:  u.AboutMe,
 		Ctime:    time.UnixMilli(u.Ctime),
+		Utime:    time.UnixMilli(u.Utime),
 	}
 }
 
@@ -117,5 +122,6 @@ func (r *UserRepositoryDao) domainToEntity(u domain.User) entity.User {
 		Birthday: u.Birthday,
 		AboutMe:  u.AboutMe,
 		Ctime:    u.Ctime.UnixMilli(),
+		Utime:    u.Utime.UnixMilli(),
 	}
 }
