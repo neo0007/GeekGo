@@ -65,6 +65,9 @@ func (svc *UserServiceImpl) Profile(ctx context.Context, id int64) (domain.User,
 
 func (svc *UserServiceImpl) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
 	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err == nil {
+		return u, nil
+	}
 	if err != repository.ErrUserNotFound {
 		// err 为 nil 会进来这里
 		// 不为 ErrUserNotFound 也会进来这里

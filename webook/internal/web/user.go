@@ -101,7 +101,10 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 	}
 	var req Req
 	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, Result{
+			Code: 5,
+			Msg:  "bind error",
+		})
 		return
 	}
 	ok, err := u.codeSvc.Verify(c, biz, req.Phone, req.Code)
@@ -131,7 +134,7 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
-			Msg:  "系统错误",
+			Msg:  "DB系统错误",
 		})
 		return
 	}
