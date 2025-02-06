@@ -1,6 +1,7 @@
 package memory
 
 import (
+	mySMS "Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms"
 	"context"
 	"fmt"
 )
@@ -8,7 +9,7 @@ import (
 type Service struct {
 }
 
-func NewService() *Service {
+func NewService() mySMS.Service {
 	return &Service{}
 }
 

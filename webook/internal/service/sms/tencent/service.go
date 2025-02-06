@@ -1,6 +1,7 @@
 package tencent
 
 import (
+	mySMS "Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms"
 	"Neo/Workplace/goland/src/GeekGo/webook/pkg/ratelimit"
 	"context"
 	"fmt"
@@ -16,7 +17,7 @@ type Service struct {
 	limiter  ratelimit.Limiter
 }
 
-func NewService(client *sms.Client, appId string, signName string, limiter ratelimit.Limiter) *Service {
+func NewService(client *sms.Client, appId string, signName string, limiter ratelimit.Limiter) mySMS.Service {
 	return &Service{
 		client:   client,
 		appId:    &appId,
