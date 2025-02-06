@@ -1,6 +1,7 @@
 package tencent
 
 import (
+	"Neo/Workplace/goland/src/GeekGo/webook/pkg/ratelimit"
 	"context"
 	"fmt"
 	"github.com/ecodeclub/ekit"
@@ -12,13 +13,15 @@ type Service struct {
 	appId    *string
 	signName *string
 	client   *sms.Client
+	limiter  ratelimit.Limiter
 }
 
-func NewService(client *sms.Client, appId string, signName string) *Service {
+func NewService(client *sms.Client, appId string, signName string, limiter ratelimit.Limiter) *Service {
 	return &Service{
 		client:   client,
 		appId:    &appId,
 		signName: &signName,
+		limiter:  limiter,
 	}
 }
 
