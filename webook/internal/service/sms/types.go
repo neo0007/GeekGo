@@ -7,5 +7,5 @@ type Service interface {
 		args []string, numbers ...string) error
 }
 
-type Req struct {
-}
+//type Req struct {
+//}
