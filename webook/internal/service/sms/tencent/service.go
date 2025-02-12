@@ -23,11 +23,12 @@ func NewService(client *sms.Client, appId string, signName string) mySMS.Service
 	}
 }
 
-func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+// Send 方法中 biz 直接代表的就是 tplId
+func (s *Service) Send(ctx context.Context, biz string, args []string, numbers ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.SmsSdkAppId = s.appId
 	req.SignName = s.signName
-	req.TemplateId = ekit.ToPtr[string](tplId)
+	req.TemplateId = ekit.ToPtr[string](biz)
 	req.PhoneNumberSet = s.toStringPtrSlice(numbers)
 	req.TemplateParamSet = s.toStringPtrSlice(args)
 	resp, err := s.client.SendSms(req)
