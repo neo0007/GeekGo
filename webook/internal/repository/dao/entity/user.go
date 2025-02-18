@@ -14,6 +14,10 @@ type User struct {
 	Nickname string         `gorm:"type:varchar(100)"`
 	Birthday string         `gorm:"type:varchar(100)"`
 	AboutMe  string         `gorm:"type:varchar(255)"`
+
+	// Wechat的字段
+	WechatUnionID sql.NullString
+	WechatOpenID  sql.NullString `gorm:"unique"`
 	//创建时间, 毫秒数
 	Ctime int64
 	//更新时间，毫秒数

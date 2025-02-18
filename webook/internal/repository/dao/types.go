@@ -10,4 +10,5 @@ type UserDAO interface {
 	FindByEmail(ctx context.Context, email string) (entity.User, error)
 	FindByPhone(ctx context.Context, phone string) (entity.User, error)
 	FindById(ctx context.Context, id int64) (entity.User, error)
+	FindByWechat(ctx context.Context, openID string) (entity.User, error)
 }

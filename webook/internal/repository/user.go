@@ -18,9 +18,25 @@ var ErrUserNotFound = gorm.ErrUserNotFound
 type UserRepository interface {
 	Create(c context.Context, u domain.User) error
 	FindByEmail(ctx context.Context, email string) (domain.User, error)
+	FindByWechat(ctx context.Context, openID string) (domain.User, error)
 	FindByPhone(ctx context.Context, phone string) (domain.User, error)
 	FindById(ctx context.Context, id int64) (domain.User, error)
 }
+
+func (r *UserRepositoryDao) FindByWechat(ctx context.Context, openID string) (domain.User, error) {
+	ud, err := r.dao.FindByWechat(ctx, openID)
+	if err != nil {
+		return domain.User{}, err
+	}
+	u := r.entityToDomain(ud)
+	err = r.cache.Set(ctx, u)
+	if err != nil {
+		log.Println(err)
+	}
+	return u, err
+
+}
+
 type UserRepositoryDao struct {
 	dao   dao.UserDAO
 	cache cache.UserCache
@@ -88,7 +104,7 @@ func (r *UserRepositoryDao) FindById(ctx context.Context, id int64) (domain.User
 			log.Println(err)
 		}
 	}()
-	
+
 	return u, err
 }
 
@@ -101,8 +117,12 @@ func (r *UserRepositoryDao) entityToDomain(u entity.User) domain.User {
 		Nickname: u.Nickname,
 		Birthday: u.Birthday,
 		AboutMe:  u.AboutMe,
-		Ctime:    time.UnixMilli(u.Ctime),
-		Utime:    time.UnixMilli(u.Utime),
+		WechatInfo: domain.WechatInfo{
+			OpenID:  u.WechatOpenID.String,
+			UnionID: u.WechatUnionID.String,
+		},
+		Ctime: time.UnixMilli(u.Ctime),
+		Utime: time.UnixMilli(u.Utime),
 	}
 }
 
@@ -121,7 +141,15 @@ func (r *UserRepositoryDao) domainToEntity(u domain.User) entity.User {
 		Nickname: u.Nickname,
 		Birthday: u.Birthday,
 		AboutMe:  u.AboutMe,
-		Ctime:    u.Ctime.UnixMilli(),
-		Utime:    u.Utime.UnixMilli(),
+		WechatOpenID: sql.NullString{
+			String: u.WechatInfo.OpenID,
+			Valid:  u.WechatInfo.OpenID != "",
+		},
+		WechatUnionID: sql.NullString{
+			String: u.WechatInfo.UnionID,
+			Valid:  u.WechatInfo.UnionID != "",
+		},
+		Ctime: u.Ctime.UnixMilli(),
+		Utime: u.Utime.UnixMilli(),
 	}
 }

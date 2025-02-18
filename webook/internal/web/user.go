@@ -23,6 +23,7 @@ type UserHandler struct {
 	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
+	jwtHandler
 }
 
 func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
@@ -37,6 +38,7 @@ func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserH
 		codeSvc:     codeSvc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
+		jwtHandler:  newJwtHandler(),
 	}
 
 }
@@ -58,6 +60,31 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 	ug.GET("/profile", u.ProfileJWT)
 	ug.POST("/login_sms/code/send", u.SendSMSLoginCode)
 	ug.POST("/login_sms", u.LoginSMS)
+	ug.POST("/refresh_token", u.RefreshToken)
+}
+
+// RefreshToken 可以同时刷新长短 Token 要用 Redis 来记录是否有效
+// refresh_token 是一次性的
+// 还可以参考登录校验，比较 User-Agent 来增强安全性
+func (u *UserHandler) RefreshToken(c *gin.Context) {
+	//只有这个接口拿出来才是 refresh_token
+	refreshToken := ExtractToken(c)
+	var rc RefreshClaims
+	token, err := jwt.ParseWithClaims(refreshToken, &rc, func(token *jwt.Token) (interface{}, error) {
+		return u.rtKey, nil
+	})
+	if err != nil || !token.Valid {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	err = u.setJWTToken(c, rc.Uid)
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	c.JSON(http.StatusOK, Result{
+		Msg: "刷新成功",
+	})
 }
 
 func (u *UserHandler) SendSMSLoginCode(c *gin.Context) {
@@ -140,6 +167,13 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 	}
 
 	if err = u.setJWTToken(c, user.Id); err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+	if err = u.setRefreshToken(c, user.Id); err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -272,27 +306,12 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 		c.String(http.StatusOK, "系统错误！")
 		return
 	}
+	if err = u.setRefreshToken(c, user.Id); err != nil {
+		c.String(http.StatusOK, "系统错误！")
+		return
+	}
 
 	c.String(http.StatusOK, "登录成功！")
-}
-
-func (u *UserHandler) setJWTToken(c *gin.Context, uid int64) error {
-	claims := UserClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 120)),
-		},
-		Uid:       uid,
-		UserAgent: c.Request.UserAgent(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	tokenStr, err := token.SignedString([]byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu"))
-	if err != nil {
-		c.String(http.StatusInternalServerError, "系统错误")
-		return err
-	}
-	c.Header("x-jwt-token", tokenStr)
-	return nil
 }
 
 func (u *UserHandler) Edit(c *gin.Context) {
@@ -341,11 +360,4 @@ func (u *UserHandler) ProfileJWT(c *gin.Context) {
 	c.JSON(http.StatusOK, uProfile)
 	//println(claims.Uid)
 	//c.String(http.StatusOK, "这是你的 Profile")
-}
-
-type UserClaims struct {
-	jwt.RegisteredClaims
-	//声明你要放进token里面的数据
-	Uid       int64
-	UserAgent string
 }

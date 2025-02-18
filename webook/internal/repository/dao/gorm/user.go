@@ -60,3 +60,10 @@ func (dao *GORMUserDAO) FindById(ctx context.Context, id int64) (entity.User, er
 	err := dao.db.WithContext(ctx).First(&u, "id = ?", id).Error
 	return u, err
 }
+
+func (dao *GORMUserDAO) FindByWechat(ctx context.Context, openID string) (entity.User, error) {
+	var u entity.User
+	err := dao.db.WithContext(ctx).First(&u, "wechat_open_id = ?", openID).Error
+	//err := dao.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
+	return u, err
+}
