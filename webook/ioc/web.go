@@ -2,6 +2,7 @@ package ioc
 
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
+	ijwt "Neo/Workplace/goland/src/GeekGo/webook/internal/web/jwt"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,10 +20,10 @@ func InitGin(mdls []gin.HandlerFunc, hdl *web.UserHandler,
 	return r
 }
 
-func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		corsHdl(),
-		middleware.NewLoginJWTMiddlewareBuilder().
+		middleware.NewLoginJWTMiddlewareBuilder(jwtHdl).
 			IgnorePath("/users/login").
 			IgnorePath("/oauth2/wechat/authurl").
 			IgnorePath("/oauth2/wechat/callback").

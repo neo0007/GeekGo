@@ -8,6 +8,7 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository/dao/gorm"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
+	ijwt "Neo/Workplace/goland/src/GeekGo/webook/internal/web/jwt"
 	"Neo/Workplace/goland/src/GeekGo/webook/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -32,6 +33,8 @@ func InitWebServer() *gin.Engine {
 		ioc.InitSMSService,
 		ioc.InitWechatService,
 		ioc.NewWechatHandlerConfig,
+
+		ijwt.NewRedisJWTHandler,
 
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,

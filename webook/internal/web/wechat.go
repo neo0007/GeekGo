@@ -3,6 +3,7 @@ package web
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/oauth2/wechat"
+	ijwt "Neo/Workplace/goland/src/GeekGo/webook/internal/web/jwt"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,7 @@ import (
 type OAuth2WechatHandler struct {
 	svc     wechat.Service
 	userSvc service.UserService
-	jwtHandler
+	ijwt.Handler
 	stateKey []byte
 	cfg      WechatHandlerConfig
 }
@@ -24,13 +25,14 @@ type WechatHandlerConfig struct {
 	Secure bool
 }
 
-func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService, cfg WechatHandlerConfig) *OAuth2WechatHandler {
+func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService,
+	cfg WechatHandlerConfig, jwtHdl ijwt.Handler) *OAuth2WechatHandler {
 	return &OAuth2WechatHandler{
-		svc:        svc,
-		userSvc:    userSvc,
-		stateKey:   []byte("56j6wp8hlc8biryjns2ju2n6g02f9fyu"),
-		cfg:        cfg,
-		jwtHandler: newJwtHandler(),
+		svc:      svc,
+		userSvc:  userSvc,
+		stateKey: []byte("56j6wp8hlc8biryjns2ju2n6g02f9fyu"),
+		cfg:      cfg,
+		Handler:  jwtHdl,
 	}
 }
 
@@ -110,7 +112,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		})
 		return
 	}
-	err = h.setJWTToken(ctx, u.Id)
+	err = h.SetLoginToken(ctx, u.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
@@ -118,14 +120,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		})
 		return
 	}
-	err = h.setRefreshToken(ctx, u.Id)
-	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
-			Code: 5,
-			Msg:  "系统错误",
-		})
-		return
-	}
+
 	ctx.JSON(http.StatusOK, Result{
 		Msg: "OK",
 	})

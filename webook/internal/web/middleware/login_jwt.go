@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"Neo/Workplace/goland/src/GeekGo/webook/internal/web"
+	ijwt "Neo/Workplace/goland/src/GeekGo/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
@@ -9,10 +9,13 @@ import (
 
 type LoginJWTMiddlewareBuilder struct {
 	paths []string
+	ijwt.Handler
 }
 
-func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
-	return &LoginJWTMiddlewareBuilder{}
+func NewLoginJWTMiddlewareBuilder(jwtHdl ijwt.Handler) *LoginJWTMiddlewareBuilder {
+	return &LoginJWTMiddlewareBuilder{
+		Handler: jwtHdl,
+	}
 }
 
 func (l *LoginJWTMiddlewareBuilder) IgnorePath(paths string) *LoginJWTMiddlewareBuilder {
@@ -29,8 +32,8 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			}
 		}
 
-		tokenStr := web.ExtractToken(c)
-		claims := &web.UserClaims{}
+		tokenStr := l.ExtractToken(c)
+		claims := &ijwt.UserClaims{}
 		// ParseWithClaims 参数一定要传指针，因为它会修改参数内容，如果是结构体本身，它只会复制一份新的，你拿不到修改后的数据
 
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
@@ -55,6 +58,11 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
+		err = l.CheckSession(c, claims.Ssid)
+		if err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 		//now := time.Now()
 		//// 每 30分钟刷新一次
 		//if claims.ExpiresAt.Sub(now) < time.Minute*90 {

@@ -3,11 +3,13 @@ package web
 import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/domain"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service"
+	ijwt "Neo/Workplace/goland/src/GeekGo/webook/internal/web/jwt"
 	"errors"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"net/http"
 	"time"
 )
@@ -23,10 +25,12 @@ type UserHandler struct {
 	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
-	jwtHandler
+	cmd         redis.Cmdable
+	ijwt.Handler
 }
 
-func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService,
+	jwthandler ijwt.Handler) *UserHandler {
 	const (
 		emailRegexPattern    = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
 		passwordRegexPattern = "^[A-Za-z\\d@$!%*?&]{8,}$"
@@ -38,7 +42,7 @@ func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserH
 		codeSvc:     codeSvc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
-		jwtHandler:  newJwtHandler(),
+		Handler:     jwthandler,
 	}
 
 }
@@ -54,7 +58,8 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 	ug := r.Group("/users")
 	ug.POST("/signup", u.Signup)
 	//ug.POST("/login", u.Login)
-	ug.POST("login", u.LoginJWT)
+	ug.POST("/login", u.LoginJWT)
+	ug.POST("/logout", u.LogOut)
 	ug.POST("/edit", u.Edit)
 	//ug.GET("/profile", u.Profile)
 	ug.GET("/profile", u.ProfileJWT)
@@ -66,18 +71,40 @@ func (u *UserHandler) RegisterRoutes(r *gin.Engine) {
 // RefreshToken 可以同时刷新长短 Token 要用 Redis 来记录是否有效
 // refresh_token 是一次性的
 // 还可以参考登录校验，比较 User-Agent 来增强安全性
+func (u *UserHandler) LogOut(c *gin.Context) {
+	err := u.ClearToken(c)
+	if err != nil {
+		c.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "退出登录失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, Result{
+		Code: 5,
+		Msg:  "退出登录OK",
+	})
+}
+
 func (u *UserHandler) RefreshToken(c *gin.Context) {
 	//只有这个接口拿出来才是 refresh_token
-	refreshToken := ExtractToken(c)
-	var rc RefreshClaims
+	refreshToken := u.ExtractToken(c)
+	var rc ijwt.RefreshClaims
 	token, err := jwt.ParseWithClaims(refreshToken, &rc, func(token *jwt.Token) (interface{}, error) {
-		return u.rtKey, nil
+		return ijwt.RtKey, nil
 	})
 	if err != nil || !token.Valid {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	err = u.setJWTToken(c, rc.Uid)
+	err = u.CheckSession(c, rc.Ssid)
+	if err != nil {
+		//要么 redis 有问题，要么已经退出登录
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	err = u.SetJWTToken(c, rc.Uid, rc.Ssid)
 	if err != nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
@@ -166,14 +193,7 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 		return
 	}
 
-	if err = u.setJWTToken(c, user.Id); err != nil {
-		c.JSON(http.StatusOK, Result{
-			Code: 5,
-			Msg:  "系统错误",
-		})
-		return
-	}
-	if err = u.setRefreshToken(c, user.Id); err != nil {
+	if err = u.SetLoginToken(c, user.Id); err != nil {
 		c.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -302,11 +322,7 @@ func (u *UserHandler) LoginJWT(c *gin.Context) {
 		c.String(http.StatusOK, err.Error())
 		return
 	}
-	if err = u.setJWTToken(c, user.Id); err != nil {
-		c.String(http.StatusOK, "系统错误！")
-		return
-	}
-	if err = u.setRefreshToken(c, user.Id); err != nil {
+	if err = u.SetLoginToken(c, user.Id); err != nil {
 		c.String(http.StatusOK, "系统错误！")
 		return
 	}
@@ -338,7 +354,7 @@ func (u *UserHandler) ProfileJWT(c *gin.Context) {
 		return
 	}
 	// ok代表是不是 *UserClaims
-	claims, ok := cs.(*UserClaims)
+	claims, ok := cs.(*ijwt.UserClaims)
 	if !ok {
 		//可以考虑监控这里
 		c.String(http.StatusOK, "系统错误")
