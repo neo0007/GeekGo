@@ -68,8 +68,18 @@ func (h RedisJWTHandler) setRefreshToken(c *gin.Context, uid int64, ssid string)
 }
 
 func (h RedisJWTHandler) CheckSession(c *gin.Context, ssid string) error {
-	_, err := h.cmd.Exists(c, fmt.Sprintf("user:ssid:%s", ssid)).Result()
-	return err
+	val, err := h.cmd.Exists(c, fmt.Sprintf("user:ssid:%s", ssid)).Result()
+	switch err {
+	case redis.Nil:
+		return nil
+	case nil:
+		if val == 0 {
+			return nil
+		}
+		return errors.New("session expired")
+	default:
+		return err
+	}
 }
 
 func (h RedisJWTHandler) ClearToken(c *gin.Context) error {

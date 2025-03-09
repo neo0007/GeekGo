@@ -5,6 +5,7 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/repository"
 	"context"
 	"errors"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -74,6 +75,7 @@ func (svc *UserServiceImpl) FindOrCreate(ctx context.Context, phone string) (dom
 		// 不为 ErrUserNotFound 也会进来这里
 		return domain.User{}, err
 	}
+	zap.L().Info("用户未注册", zap.String("phone", phone))
 	u = domain.User{
 		Phone: phone,
 	}

@@ -4,6 +4,7 @@ import (
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/auth"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/failover"
+	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/logger"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/memory"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/ratelimit"
 	"Neo/Workplace/goland/src/GeekGo/webook/internal/service/sms/retryable"
@@ -66,15 +67,13 @@ func InitSMSService(cmdable redis.Cmdable) sms.Service {
 	// 4. 失败转移策略（failover）
 	failoverService := failover.NewFailoverSMSService([]sms.Service{rateLimitedSvc1, rateLimitedSvc2})
 
-	// 5. 加入重试机制
+	//5. 加入重试机制
 	retryMax := 3 // 最大重试次数
 	retryService := retryable.NewService(failoverService, retryMax)
 
-	// 6. 认证装饰器
-	secretKey := "my-secret-key" // 业务方的密钥
+	//6. 认证装饰器
+	secretKey := []byte("56j6wp8hlc8biryjns2ju2n6g02f6fyu") // 业务方的密钥
 	authService := auth.NewAuthSMSService(retryService, secretKey)
-
-	return authService
 
 	//// 7. 同步转异步机制
 	//asyncService := async.NewSMSService(authService, repo)
@@ -83,4 +82,13 @@ func InitSMSService(cmdable redis.Cmdable) sms.Service {
 	//asyncService.StartAsync()
 
 	//return asyncService
+
+	// 7. **日志装饰器**
+	logService := logger.NewService(authService)
+
+	return logService
+}
+
+func InitSMSServiceV1(cmdable redis.Cmdable) sms.Service {
+	return memory.NewService()
 }

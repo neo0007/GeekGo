@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -137,6 +138,7 @@ func (u *UserHandler) SendSMSLoginCode(c *gin.Context) {
 			Msg: "发送成功",
 		})
 	case service.ErrCodeSendTooMany:
+		zap.L().Warn("短信发送太频繁", zap.Error(err))
 		c.JSON(http.StatusOK, Result{
 			Msg: "发送验证码太频繁, 1分钟后再试",
 		})
@@ -174,6 +176,11 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
+		zap.L().Error("校验验证码出错", zap.Error(err))
+		//不能这样打印，因为手机号码是敏感数据
+		//zap.String("手机号码", req.Phone)
+		//debug是允许的：
+		zap.L().Debug("", zap.String("手机号码", req.Phone))
 		return
 	}
 	if !ok {
@@ -198,6 +205,7 @@ func (u *UserHandler) LoginSMS(c *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
+		zap.L().Error("设置 JWT token 出现异常", zap.Error(err))
 		return
 	}
 
