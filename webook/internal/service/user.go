@@ -21,11 +21,23 @@ type UserService interface {
 }
 
 type UserServiceImpl struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	logger *zap.Logger
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &UserServiceImpl{repo: repo}
+func NewUserService(repo repository.UserRepository, l *zap.Logger) UserService {
+	return &UserServiceImpl{
+		repo:   repo,
+		logger: l,
+	}
+}
+
+// NewUserServiceV1 中 logger 依赖注入，但没有完全注入
+func NewUserServiceV1(repo repository.UserRepository, l *zap.Logger) UserService {
+	return &UserServiceImpl{
+		repo:   repo,
+		logger: zap.L(),
+	}
 }
 
 func (svc *UserServiceImpl) Signup(c context.Context, u domain.User) error {
@@ -76,6 +88,7 @@ func (svc *UserServiceImpl) FindOrCreate(ctx context.Context, phone string) (dom
 		return domain.User{}, err
 	}
 	zap.L().Info("用户未注册", zap.String("phone", phone))
+	svc.logger.Info("用户未注册", zap.String("phone", phone))
 	u = domain.User{
 		Phone: phone,
 	}
